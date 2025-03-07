@@ -13,6 +13,6 @@ int main() {
     std::getline(std::cin, input);
     if (input == "exit 0") return 0;
     else std::cout << input << ": command not found\n";
-    return 0; 
   }
+  return 0; 
 }
