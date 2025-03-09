@@ -6,17 +6,24 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
+std::string getPath(std::string command) {
+  char* path = getenv("PATH");
+  std::stringstream ss(path);
+  std::string dir;
+  while (!ss.eof()) {
+    getline(ss, dir, ':');
+    std::string absPath = dir + '/' + command;
+    if (fs::exists(absPath)) {
+      return absPath;
+    }
+  }
+  return "";
+}
+
 int main() {
   // Flush after every std::cout / std:cerr
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
-  char* path = getenv("PATH");
-  std::stringstream ss(path);
-  std::string dir;
-  std::vector<std::string> tokens;
-  while (std::getline(ss, dir, ':')) {
-    tokens.push_back(dir);
-  }
   
   while (true) {
     std::cout << "$ ";
@@ -37,17 +44,13 @@ int main() {
         std::cout << commandType << " is a shell builtin\n";
       }
       else {
-        bool notFound = false;
-        for (auto dir : tokens) {
-          for (auto entry : fs::directory_iterator(dir)) {
-            if (commandType == entry.path().filename()) {
-              notFound = true;
-              std::cout << commandType << " is " << entry.path().string() << "\n";
-            }
-          }
-          if (notFound) break;
+        std::string path = getPath(commandType);
+        if (path != "") {
+          std::cout << commandType << " is " << path << "\n";
         }
-        if (!notFound) std::cout << commandType << ": not found\n";
+        else {
+          std::cout << commandType << ": not found\n";
+        }
       }
     }
     else {
