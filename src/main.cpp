@@ -40,18 +40,20 @@ int main() {
       std::cout << input.substr(5) << "\n";
     }
     else if (input.find("type") == 0) { // type command
-      std::string commandType = input.substr(5);
-      std::set<std::string> st = {"echo", "exit", "type"};
-      if (st.find(commandType) != st.end()) { // If it's a builtin command
-        std::cout << commandType << " is a shell builtin\n";
-      }
-      else { // Getting path for executable files
-        std::string path = getPath(commandType);
-        if (path != "") {
-          std::cout << commandType << " is " << path << "\n";
+      if (input.size() > 4 && input[5] != ' ') {
+        std::string commandType = input.substr(5);
+        std::set<std::string> st = {"echo", "exit", "type", "pwd"};
+        if (st.find(commandType) != st.end()) { // If it's a builtin command
+          std::cout << commandType << " is a shell builtin\n";
         }
-        else {
-          std::cout << commandType << ": not found\n";
+        else { // Getting path for executable files
+          std::string path = getPath(commandType);
+          if (path != "") {
+            std::cout << commandType << " is " << path << "\n";
+          }
+          else {
+            std::cout << commandType << ": not found\n";
+          }
         }
       }
     }
