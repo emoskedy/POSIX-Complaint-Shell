@@ -68,8 +68,8 @@ int main() {
             arg += " " + program;
           }
           if (arg != program) arg += " " + program;
-          std::cout << arg << "\n";
-          args.push_back(arg);
+          arg = arg.substr(1);
+          args.push_back(arg.substr(0, arg.size() - 1));
         }
         else args.push_back(program);
       }
@@ -80,10 +80,10 @@ int main() {
       }
       argv.push_back(nullptr);
       
-      std::string path = getPath(args[0]);
+      std::string path = getPath(argv[0]);
       // If the program is not found
       if (path == "") {
-        std::cout << input << ": command not found\n";
+        std::cout << argv[0] << ": command not found\n";
         continue;
       }
 
