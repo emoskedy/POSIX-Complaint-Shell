@@ -4,6 +4,8 @@
 #include <string>
 #include <sstream>
 #include <filesystem>
+#include <unistd.h>
+#include <sys/wait.h>
 namespace fs = std::filesystem;
 
 std::string getPath(std::string command) {
@@ -31,19 +33,19 @@ int main() {
     std::string input;
     std::getline(std::cin, input);
     
-    if (input.find("exit") == 0) {
-      break;
+    if (input.find("exit") == 0) { // exit command
+      return 0;
     } 
-    else if (input.find("echo") == 0) {
+    else if (input.find("echo") == 0) { // echo command
       std::cout << input.substr(5) << "\n";
     }
-    else if (input.find("type") == 0) {
+    else if (input.find("type") == 0) { // type command
       std::string commandType = input.substr(5);
       std::set<std::string> st = {"echo", "exit", "type"};
-      if (st.find(commandType) != st.end()) {
+      if (st.find(commandType) != st.end()) { // If it's a builtin command
         std::cout << commandType << " is a shell builtin\n";
       }
-      else {
+      else { // Getting path for executable files
         std::string path = getPath(commandType);
         if (path != "") {
           std::cout << commandType << " is " << path << "\n";
@@ -53,10 +55,49 @@ int main() {
         }
       }
     }
-    else {
-      std::cout << input << ": command not found\n";
+    else { // Not builtin command, could be trying to run a program or the command/program is not found
+      std::stringstream ss(input);
+      std::string program;
+      std::vector<std::string> args;
+      while (ss >> program) {
+        if (program[0] == '"') {
+          std::string arg = program;
+          while (ss >> program && program[program.size() - 1] != '"') {
+            arg += " " + program;
+          }
+          if (arg != program) arg += " " + program;
+          std::cout << arg << "\n";
+          args.push_back(arg);
+        }
+        else args.push_back(program);
+      }
+      
+      std::vector<char*> argv;
+      for (auto &arg : args) { 
+        argv.push_back(const_cast<char*>(arg.c_str()));
+      }
+      argv.push_back(nullptr);
+      
+      std::string path = getPath(args[0]);
+      // If the program is not found
+      if (path == "") {
+        std::cout << input << ": command not found\n";
+        continue;
+      }
+
+      // If found, create a child process so it won't terminate the program when execute
+      pid_t pid = fork();
+      if (pid == 0) { // Child process
+        execvp(argv[0], argv.data());
+      }
+      else if (pid > 0) { // Parent process
+        int status;
+        waitpid(pid, &status, 0);
+      }
+      else { // cannot fork
+        perror("fork failed");
+      }
     }
-    // for (std::string a : tokens) std::cout << a << "\n";
   }
   return 0; 
 }
