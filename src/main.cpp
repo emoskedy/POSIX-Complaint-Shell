@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <limits.h>
 namespace fs = std::filesystem;
 
 std::string getPath(std::string command) {
@@ -56,6 +57,10 @@ int main() {
           }
         }
       }
+    }
+    else if (input.find("pwd") == 0) {
+      char buf[PATH_MAX];
+      std::cout << getcwd(buf, sizeof(buf)) << "\n";
     }
     else { // Not builtin command, could be trying to run a program or the command/program is not found
       std::stringstream ss(input);
