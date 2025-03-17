@@ -62,6 +62,13 @@ int main() {
       char buf[PATH_MAX];
       std::cout << getcwd(buf, sizeof(buf)) << "\n";
     }
+    else if (input.find("cd") == 0) {
+      chdir("/");
+      if (chdir(input.substr(3).c_str()) != 0) {
+        std::string error = "cd: " + input.substr(3);
+        perror(error.c_str());
+      }
+    }
     else { // Not builtin command, could be trying to run a program or the command/program is not found
       std::stringstream ss(input);
       std::string program;
