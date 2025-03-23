@@ -31,8 +31,10 @@ void cd_builtin(std::string input) {
     i++;
   }
   
+  // Getting the current path
   char buf[PATH_MAX];
   std::string currPath = getcwd(buf, sizeof(buf));
+
   // Dealing with absolute paths
   if (input[i] == '/') {
     if (chdir(input.substr(i).c_str()) != 0) {
@@ -42,67 +44,43 @@ void cd_builtin(std::string input) {
     }
   }
   else { // Dealing with relative paths
-    int j = i;
-    // Getting the parent directory
-    while (j < n && input[j] != '/') {
-      j++;
+    std::string dir; 
+    std::stringstream ss;
+    ss.str(input.substr(i));
+    std::vector<std::string> directories;
+
+    // Storing directories into a vector
+    while (getline(ss, dir, '/')) {
+      directories.push_back(dir);
     }
-    std::string dir = input.substr(i, j - i); 
+    
+    int d = directories.size();
+    std::vector<std::string> newP;
+    ss.clear();
+    ss.str(currPath.substr(1));
 
-    // Change directory to current directory
-    if (dir == "." || dir != "..") {
-      std::string pathtocd = "/";
-      if (dir != ".") {
-        pathtocd += input.substr(i);
-      }
-      else { // removing ./
-        pathtocd += input.substr(j);
-      }
+    while (getline(ss, dir, '/')) {
+      newP.push_back(dir);
+    }
 
-      if (chdir((currPath + pathtocd).c_str()) != 0) {
-        chdir(currPath.c_str());
-        std::string error = "cd: " + pathtocd;
-        perror(error.c_str());
+    // Dealing with changing to parent or current directory
+    for (int i = 0; i < d; i++) {
+      if (directories[i] == "..") {
+        newP.pop_back();
+      }
+      else {
+        newP.push_back(directories[i]);
       }
     }
-    else { // Change directory to the parent directory
-      std::stringstream ss;
-      ss.str(input.substr(i));
-      std::vector<std::string> directories;
 
-      // Storing directories into a vector
-      while (getline(ss, dir, '/')) {
-        directories.push_back(dir);
-      }
-      
-      int d = directories.size();
-      std::vector<std::string> newP;
-      ss.clear();
-      ss.str(currPath.substr(1));
+    // Putting all directories back into a string
+    std::string newPath = "/";
+    for (int i = 0; i < newP.size(); i++) newPath += newP[i] + "/";
 
-      // Storing directories for changing to parent directory
-      while (getline(ss, dir, '/')) {
-        newP.push_back(dir);
-      }
-
-      for (int i = 0; i < d; i++) {
-        if (directories[i] == "..") {
-          newP.pop_back();
-        }
-        else {
-          newP.push_back(directories[i]);
-        }
-      }
-
-      // Putting all directories back into a string to change directory
-      std::string newPath = "/";
-      for (int i = 0; i < newP.size(); i++) newPath += newP[i] + "/";
-
-      if (chdir(newPath.c_str()) != 0) {
-        chdir(currPath.c_str());
-        std::string error = "cd: " + newPath;
-        perror(error.c_str());
-      }
+    if (chdir(newPath.c_str()) != 0) {
+      chdir(currPath.c_str());
+      std::string error = "cd: " + newPath;
+      perror(error.c_str());
     }
   }
 }
@@ -142,11 +120,11 @@ int main() {
         }
       }
     }
-    else if (input.find("pwd") == 0) {
+    else if (input.find("pwd") == 0) { // pwd command
       char buf[PATH_MAX];
       std::cout << getcwd(buf, sizeof(buf)) << "\n";
     }
-    else if (input.find("cd") == 0) {
+    else if (input.find("cd") == 0) { // cd command
       cd_builtin(input);
     }
     else { // Not builtin command, could be trying to run a program or the command/program is not found
