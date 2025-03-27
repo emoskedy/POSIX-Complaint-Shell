@@ -43,6 +43,10 @@ void cd_builtin(std::string input) {
       perror(error.c_str());
     }
   }
+  else if (input[i] == '~') {
+    std::string path = getenv("HOME");
+    chdir(path.c_str());
+  }
   else { // Dealing with relative paths
     std::string dir; 
     std::stringstream ss;
